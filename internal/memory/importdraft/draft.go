@@ -6,6 +6,7 @@ package importdraft
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -90,6 +91,28 @@ func Load(path string) (*MemoryDraft, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read file: %w", err)
 	}
+	return decode(data)
+}
+
+// LoadReader reads and JSON-decodes a memory draft from r.
+//
+// The CLI reaches for this when the draft arrives on stdin instead of disk, so
+// a producer can pipe a draft straight into `mnemon import -` with no temporary
+// file. Splitting it from Load keeps a file path and a stream separate
+// concepts: Load never takes over the process's own stdin.
+func LoadReader(r io.Reader) (*MemoryDraft, error) {
+	if r == nil {
+		return nil, fmt.Errorf("read stdin: no input")
+	}
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return nil, fmt.Errorf("read stdin: %w", err)
+	}
+	return decode(data)
+}
+
+// decode unmarshals the shared draft schema from raw bytes.
+func decode(data []byte) (*MemoryDraft, error) {
 	var draft MemoryDraft
 	if err := json.Unmarshal(data, &draft); err != nil {
 		return nil, fmt.Errorf("parse JSON: %w", err)

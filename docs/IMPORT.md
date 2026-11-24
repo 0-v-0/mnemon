@@ -10,7 +10,7 @@ into the Mnemon memory graph.
 ## Workflow
 
 ```
-Chat export / Markdown -> LLM extraction prompt -> memory_draft.json -> mnemon import <file>
+Chat export / Markdown -> LLM extraction prompt -> memory_draft.json -> mnemon import <file|->
 ```
 
 1. Export the source chat log or notes as Markdown or plain text.
@@ -18,6 +18,13 @@ Chat export / Markdown -> LLM extraction prompt -> memory_draft.json -> mnemon i
    a `memory_draft.json` file that matches this schema.
 3. Run `mnemon import memory_draft.json`. Mnemon handles deduplication, graph
    edge construction, embeddings when available, and lifecycle scoring.
+
+   Pass `-` instead of a path to read the draft from stdin, which lets a
+   generator pipe it in without a temporary file:
+
+   ```sh
+   generate-draft | mnemon import -
+   ```
 
 ---
 

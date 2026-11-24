@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `mnemon import -` reads the draft from stdin, so a generator can pipe it in
+  with no temporary file. A path argument keeps its meaning (a file literally
+  named `-` is still read as a file only when it exists under that name; the
+  single `-` argument is the stdin request).
 - Optional v0.3.4 Memory Agent/AML backend: original records, source-linked
   consolidation, evidence retrieval, and operational metrics, logs and traces.
   Existing Memory commands and databases retain the public CLI behavior.

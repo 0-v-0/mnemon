@@ -92,6 +92,24 @@ func TestValidateRejectsInvalidEdges(t *testing.T) {
 	}
 }
 
+func TestLoadReaderDecodesFromStream(t *testing.T) {
+	draft, err := LoadReader(strings.NewReader(`{"schema_version":"1","insights":[{"content":"piped"}]}`))
+	if err != nil {
+		t.Fatalf("LoadReader() error = %v", err)
+	}
+	if draft.SchemaVersion != "1" || len(draft.Insights) != 1 || draft.Insights[0].Content != "piped" {
+		t.Fatalf("LoadReader() = %+v, want one insight from the stream", draft)
+	}
+
+	if _, err := LoadReader(strings.NewReader("{ not json")); err == nil ||
+		!strings.Contains(err.Error(), "parse JSON") {
+		t.Fatalf("LoadReader(bad json) error = %v, want parse JSON", err)
+	}
+	if _, err := LoadReader(nil); err == nil || !strings.Contains(err.Error(), "no input") {
+		t.Fatalf("LoadReader(nil) error = %v, want no input", err)
+	}
+}
+
 func TestResolvedSourceFallsBackFromInsightToDraftToImport(t *testing.T) {
 	draft := &MemoryDraft{
 		Source: "chat-export",

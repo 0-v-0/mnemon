@@ -21,8 +21,18 @@ var (
 	importDryRun bool
 )
 
+// loadDraft decodes the draft named by arg. A single "-" means stdin, so a
+// pipeline needs no temporary file; every other value is a path. The reader is
+// taken from the command so tests can substitute their own input.
+func loadDraft(cmd *cobra.Command, arg string) (*importdraft.MemoryDraft, error) {
+	if arg == "-" {
+		return importdraft.LoadReader(cmd.InOrStdin())
+	}
+	return importdraft.Load(arg)
+}
+
 var importCmd = &cobra.Command{
-	Use:   "import <file>",
+	Use:   "import <file|->",
 	Short: "Import a memory draft file",
 	Long: `Import insights from a memory draft JSON file (schema_version: "1").
 
@@ -30,11 +40,16 @@ Each insight passes through Mnemon's normal write path: deduplication,
 graph edge construction, embeddings, and lifecycle scoring are all applied
 automatically.
 
+Pass - in place of the file to read the draft from stdin, so a producer can
+pipe it in without writing a temporary file:
+
+    generate-draft | mnemon import -
+
 The draft format and a reference LLM prompt for generating it from chat
 exports are documented in docs/IMPORT.md.`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		draft, err := importdraft.Load(args[0])
+		draft, err := loadDraft(cmd, args[0])
 		if err != nil {
 			return err
 		}

@@ -5,12 +5,40 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/mnemon-dev/mnemon/internal/memory/model"
 	"github.com/mnemon-dev/mnemon/internal/memory/store"
 )
+
+func TestImportReadsDraftFromStdin(t *testing.T) {
+	oldDataDir, oldStoreName, oldReadOnly := dataDir, storeName, readOnly
+	oldImportNoDiff, oldImportDryRun := importNoDiff, importDryRun
+	t.Cleanup(func() {
+		dataDir, storeName, readOnly = oldDataDir, oldStoreName, oldReadOnly
+		importNoDiff, importDryRun = oldImportNoDiff, oldImportDryRun
+		importCmd.SetIn(nil)
+	})
+	dataDir = t.TempDir()
+	storeName = ""
+	readOnly = false
+	importNoDiff = false
+	importDryRun = true
+	importCmd.SetIn(strings.NewReader(`{"schema_version":"1","insights":[{"content":"piped memory"}]}`))
+
+	var runErr error
+	out := captureStdout(t, func() {
+		runErr = importCmd.RunE(importCmd, []string{"-"})
+	})
+	if runErr != nil {
+		t.Fatalf("import -: %v", runErr)
+	}
+	if !strings.Contains(out, "1 insights") {
+		t.Fatalf("stdin draft was not read: %s", out)
+	}
+}
 
 func TestImportGraceProtectsNewbornBatchAndReportsIDs(t *testing.T) {
 	t.Setenv("MNEMON_EMBED_ENDPOINT", "http://127.0.0.1:1")

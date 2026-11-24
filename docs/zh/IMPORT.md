@@ -9,7 +9,7 @@
 ## 工作流概览
 
 ```
-聊天导出 / Markdown -> LLM 提取提示词 -> memory_draft.json -> mnemon import <file>
+聊天导出 / Markdown -> LLM 提取提示词 -> memory_draft.json -> mnemon import <file|->
 ```
 
 1. 将原始聊天记录或笔记导出为 Markdown 或纯文本。
@@ -17,6 +17,12 @@
    `memory_draft.json`。
 3. 运行 `mnemon import memory_draft.json`，Mnemon 自动完成去重、图谱边构建、
    可用时的向量嵌入和生命周期评分。
+
+   用 `-` 代替路径即从 stdin 读取草稿，生成方能直接管道送入、不必写临时文件：
+
+   ```sh
+   generate-draft | mnemon import -
+   ```
 
 ---
 
